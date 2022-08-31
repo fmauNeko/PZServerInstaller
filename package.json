@@ -1,0 +1,39 @@
+{
+  "name": "pzserverinstaller",
+  "version": "1.0.0",
+  "description": "Installs and updates Project Zomboid server, and workshop mods / collections.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fmauNeko/PZServerInstaller.git"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Florian Maunier",
+    "email": "fmauneko@dissidence.ovh",
+    "url": "https://dissidence.ovh"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fmauNeko/PZServerInstaller/issues"
+  },
+  "homepage": "https://github.com/fmauNeko/PZServerInstaller#readme",
+  "funding": "https://ko-fi.com/fmauneko",
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@babel/preset-env": "^7.18.10",
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@rollup/plugin-babel": "^5.3.1",
+    "commitizen": "^4.2.5",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "husky": "^8.0.1",
+    "rollup": "^2.79.0"
+  }
+}

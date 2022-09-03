@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import got from 'got'; // eslint-disable-line import/no-unresolved
 import { SteamCmd } from 'steamcmd-interface';
 import toml from 'toml';
@@ -9,6 +11,7 @@ const rawConfig = await readFile(path.join(process.cwd(), 'config.toml'), 'utf-8
 const config = toml.parse(rawConfig);
 
 const steamCmd = await SteamCmd.init({
+  binDir: config.steamcmdPath,
   installDir: config.serverPath,
 });
 
@@ -44,7 +47,7 @@ const allWorkshopIds = [
   ),
 ];
 
-const commands = allWorkshopIds.map((i) => `workshop_download_item 380870 ${i} validate`);
+const commands = allWorkshopIds.map((i) => `workshop_download_item 108600 ${i} validate`);
 
 for await (const line of steamCmd.run(commands)) {
   console.log(line);

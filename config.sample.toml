@@ -1,0 +1,9 @@
+serverPath = ""
+
+[[workshop]]
+type = "file"
+id = "6969"
+
+[[workshop]]
+type = "collection"
+id = "6969696969"

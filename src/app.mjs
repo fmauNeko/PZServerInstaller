@@ -2,7 +2,7 @@
 
 import glob from 'glob';
 import got from 'got'; // eslint-disable-line import/no-unresolved
-import ini from 'ini';
+import ini from 'ini-win';
 import { SteamCmd } from 'steamcmd-interface';
 import toml from 'toml';
 import fs from 'node:fs';
@@ -60,7 +60,7 @@ for await (const line of steamCmd.run(commands)) {
 const serverDataPath = path.join(os.homedir(), 'Zomboid');
 
 try {
-  fsPromises.stat(serverDataPath);
+  await fsPromises.stat(serverDataPath);
 } catch {
   console.error(`
     ${serverDataPath} doesn't exist.
@@ -69,22 +69,22 @@ try {
   process.exit(1);
 }
 
-const modsPath = path.join(serverDataPath, 'Mods');
+const modsPath = path.join(serverDataPath, 'mods');
 
 try {
-  fsPromises.lstat(modsPath);
+  await fsPromises.lstat(modsPath);
 } catch {
   console.log(`
     ${path.join(serverDataPath, 'Mods')} doesn't exist.
     Creating a link from the workshop folder...
   `);
 
-  const workshopModsPath = path.join(os.homedir(), 'Steam', 'steanapps', 'workshop', 'content', '108600');
+  const workshopModsPath = path.join(os.homedir(), 'Steam', 'steamapps', 'workshop', 'content', '108600');
   try {
-    await fsPromises.link(workshopModsPath, modsPath);
+    await fsPromises.symlink(workshopModsPath, modsPath);
   } catch (err) {
     console.error(`
-      Unable to create link ${workshopModsPath} -> ${modsPath}.
+      Unable to create symbolic link ${workshopModsPath} -> ${modsPath}.
       Reported error: ${err}.
     `);
     process.exit(1);
@@ -94,7 +94,7 @@ try {
 const modInfoPaths = glob.sync(path.join(modsPath, '**', 'mod.info'));
 
 const modLoadIds = modInfoPaths.map((p) => {
-  const modInfo = ini.parse(fs.readFileSync(p));
+  const modInfo = ini.parse(fs.readFileSync(p, 'utf-8'));
   return modInfo.id;
 });
 
@@ -103,7 +103,7 @@ const serverConfigPath = path.join(serverDataPath, 'Server', 'servertest.ini');
 let serverConfig = '';
 
 try {
-  serverConfig = await fsPromises.readFile(serverConfigPath);
+  serverConfig = await fsPromises.readFile(serverConfigPath, 'utf-8');
 } catch {
   console.error(`Cannot read ${serverConfigPath}`);
   process.exit(1);
@@ -114,4 +114,4 @@ const parsedServerConfig = ini.parse(serverConfig);
 parsedServerConfig.WorkshopItems = allWorkshopIds.join(';');
 parsedServerConfig.Mods = modLoadIds.join(';');
 
-await fsPromises.writeFile(serverConfigPath, ini.stringify(parsedServerConfig));
+await fsPromises.writeFile(serverConfigPath, ini.stringify(parsedServerConfig), 'utf-8');

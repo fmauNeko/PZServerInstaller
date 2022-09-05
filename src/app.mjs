@@ -108,7 +108,7 @@ if (config.enableSteam) {
 } else {
   const modsPath = path.join(serverDataPath, 'mods');
 
-  rimraf(modsPath);
+  rimraf.sync(modsPath);
 
   try {
     await fsPromises.mkdir(modsPath);

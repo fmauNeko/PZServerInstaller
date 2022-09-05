@@ -1,6 +1,6 @@
 {
   "name": "pzserverinstaller",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Installs and updates Project Zomboid server, and workshop mods / collections.",
   "main": "src/app.mjs",
   "bin": {

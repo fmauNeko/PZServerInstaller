@@ -69,17 +69,39 @@ try {
   process.exit(1);
 }
 
+const globalSteamappsPath = path.join(os.homedir(), 'Steam', 'steamapps');
+const serverSteamappsPath = path.join(config.serverPath, 'steamapps');
+
+try {
+  await fsPromises.lstat(serverSteamappsPath);
+} catch {
+  console.log(`
+    ${serverSteamappsPath} doesn't exist.
+    Creating a link from the global steamapps folder...
+  `);
+
+  try {
+    await fsPromises.symlink(globalSteamappsPath, serverSteamappsPath);
+  } catch (err) {
+    console.error(`
+      Unable to create symbolic link ${globalSteamappsPath} -> ${serverSteamappsPath}.
+      Reported error: ${err}.
+    `);
+    process.exit(1);
+  }
+}
+
 const modsPath = path.join(serverDataPath, 'mods');
 
 try {
   await fsPromises.lstat(modsPath);
 } catch {
   console.log(`
-    ${path.join(serverDataPath, 'Mods')} doesn't exist.
+    ${modsPath} doesn't exist.
     Creating a link from the workshop folder...
   `);
 
-  const workshopModsPath = path.join(os.homedir(), 'Steam', 'steamapps', 'workshop', 'content', '108600');
+  const workshopModsPath = path.join(globalSteamappsPath, 'workshop', 'content', '108600');
   try {
     await fsPromises.symlink(workshopModsPath, modsPath);
   } catch (err) {

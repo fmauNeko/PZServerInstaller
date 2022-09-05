@@ -122,7 +122,7 @@ if (config.enableSteam) {
 
   modInfoPaths.forEach((p) => {
     const modPath = path.dirname(p);
-    const modLinkPath = path.join(modsPath, path.dirname(modPath));
+    const modLinkPath = path.join(modsPath, path.basename(modPath));
 
     try {
       fs.symlinkSync(modPath, modLinkPath);

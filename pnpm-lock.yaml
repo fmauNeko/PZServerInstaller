@@ -13,6 +13,7 @@ specifiers:
   got: ^12.3.1
   husky: ^8.0.1
   ini-win: ^3.0.3
+  rimraf: ^3.0.2
   steamcmd-interface: ^4.0.2
   toml: ^3.0.0
 
@@ -20,6 +21,7 @@ dependencies:
   glob: 8.0.3
   got: 12.3.1
   ini-win: 3.0.3
+  rimraf: 3.0.2
   steamcmd-interface: 4.0.2
   toml: 3.0.0
 
@@ -755,7 +757,7 @@ packages:
     dev: false
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /confusing-browser-globals/1.0.11:
     resolution: {integrity: sha512-JsPKdmh8ZkmnHxDk55FZ1TqVLvEQTvoByJZRN9jzI0UjxK/QgAmsphz7PGtqgPieQZ/CQcHWXCR7ATDNhGe+YA==}

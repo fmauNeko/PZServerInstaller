@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
-import glob from 'glob';
-import got from 'got'; // eslint-disable-line import/no-unresolved
-import ini from 'ini-win';
-import { SteamCmd } from 'steamcmd-interface';
-import toml from 'toml';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+
+import glob from 'glob';
+import got from 'got'; // eslint-disable-line import/no-unresolved
+import ini from 'ini-win';
+import rimraf from 'rimraf';
+import { SteamCmd } from 'steamcmd-interface';
+import toml from 'toml';
 
 const rawConfig = await fsPromises.readFile(path.join(process.cwd(), 'config.toml'), 'utf-8');
 const config = toml.parse(rawConfig);
@@ -23,6 +25,16 @@ console.log('Installing / updading game server');
 
 for await (const progress of steamCmd.updateApp(380870, { validate: true })) {
   console.log(`${progress.state} ${progress.progressPercent}%`);
+}
+
+if (!config.enableSteam) {
+  const serverJsonPath = path.join(config.serverPath, 'ProjectZomboid64.json');
+  const serverJson = await fsPromises.readFile(serverJsonPath, 'utf-8');
+  const parsedServerJson = JSON.parse(serverJson);
+
+  parsedServerJson.vmArgs.splice(parsedServerJson.vmArgs.indexOf('-Dzomboid.steam=1'), 1, '-Dzomboid.steam=0');
+
+  await fsPromises.writeFile(serverJsonPath, JSON.stringify(parsedServerJson), 'utf-8');
 }
 
 console.log('Installing / updading Workshop mods');
@@ -69,56 +81,62 @@ try {
   process.exit(1);
 }
 
-const globalSteamappsPath = path.join(os.homedir(), 'Steam', 'steamapps');
-const serverSteamappsPath = path.join(config.serverPath, 'steamapps');
+const globalWorkshopPath = path.join(os.homedir(), 'Steam', 'steamapps', 'workshop');
+let modLoadIds = [];
 
-try {
-  await fsPromises.lstat(serverSteamappsPath);
-} catch {
-  console.log(`
-    ${serverSteamappsPath} doesn't exist.
-    Creating a link from the global steamapps folder...
-  `);
+if (config.enableSteam) {
+  const serverWorkshopPath = path.join(config.serverPath, 'steamapps', 'workshop');
 
   try {
-    await fsPromises.symlink(globalSteamappsPath, serverSteamappsPath);
-  } catch (err) {
-    console.error(`
-      Unable to create symbolic link ${globalSteamappsPath} -> ${serverSteamappsPath}.
-      Reported error: ${err}.
+    await fsPromises.lstat(serverWorkshopPath);
+  } catch {
+    console.log(`
+      ${serverWorkshopPath} doesn't exist.
+      Creating a link from the global steamapps folder...
     `);
-    process.exit(1);
+
+    try {
+      await fsPromises.symlink(globalWorkshopPath, serverWorkshopPath);
+    } catch (err) {
+      console.error(`
+        Unable to create symbolic link ${globalWorkshopPath} -> ${serverWorkshopPath}.
+        Reported error: ${err}.
+      `);
+      process.exit(1);
+    }
   }
-}
+} else {
+  const modsPath = path.join(serverDataPath, 'mods');
 
-const modsPath = path.join(serverDataPath, 'mods');
+  rimraf(modsPath);
 
-try {
-  await fsPromises.lstat(modsPath);
-} catch {
-  console.log(`
-    ${modsPath} doesn't exist.
-    Creating a link from the workshop folder...
-  `);
-
-  const workshopModsPath = path.join(globalSteamappsPath, 'workshop', 'content', '108600');
   try {
-    await fsPromises.symlink(workshopModsPath, modsPath);
+    await fsPromises.mkdir(modsPath);
   } catch (err) {
-    console.error(`
-      Unable to create symbolic link ${workshopModsPath} -> ${modsPath}.
-      Reported error: ${err}.
-    `);
+    console.error(`Unable to create folder ${modsPath}.\nReported error: ${err}.`);
     process.exit(1);
   }
+
+  const workshopModsPath = path.join(globalWorkshopPath, 'content', '108600');
+  const modInfoPaths = glob.sync(path.join(workshopModsPath, '**', 'mod.info'));
+
+  modInfoPaths.forEach((p) => {
+    const modPath = path.dirname(p);
+    const modLinkPath = path.join(modsPath, path.dirname(modPath));
+
+    try {
+      fs.symlinkSync(modPath, modLinkPath);
+    } catch (err) {
+      console.error(`Unable to create symbolic link ${modPath} -> ${modLinkPath}.\nReported error: ${err}.`);
+      process.exit(1);
+    }
+  });
+
+  modLoadIds = modInfoPaths.map((p) => {
+    const modInfo = ini.parse(fs.readFileSync(p, 'utf-8'));
+    return modInfo.id;
+  });
 }
-
-const modInfoPaths = glob.sync(path.join(modsPath, '**', 'mod.info'));
-
-const modLoadIds = modInfoPaths.map((p) => {
-  const modInfo = ini.parse(fs.readFileSync(p, 'utf-8'));
-  return modInfo.id;
-});
 
 const serverConfigPath = path.join(serverDataPath, 'Server', 'servertest.ini');
 
@@ -133,7 +151,10 @@ try {
 
 const parsedServerConfig = ini.parse(serverConfig);
 
-parsedServerConfig.WorkshopItems = allWorkshopIds.join(';');
-parsedServerConfig.Mods = modLoadIds.join(';');
+if (config.enableSteam) {
+  parsedServerConfig.WorkshopItems = allWorkshopIds.join(';');
+} else {
+  parsedServerConfig.Mods = modLoadIds.join(';');
+}
 
 await fsPromises.writeFile(serverConfigPath, ini.stringify(parsedServerConfig), 'utf-8');

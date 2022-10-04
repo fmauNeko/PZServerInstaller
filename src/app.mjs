@@ -9,7 +9,6 @@ import process from 'node:process';
 import glob from 'glob';
 import got from 'got'; // eslint-disable-line import/no-unresolved
 import ini from 'ini-win';
-import rimraf from 'rimraf';
 import { SteamCmd } from 'steamcmd-interface';
 import toml from 'toml';
 
@@ -63,10 +62,12 @@ const allWorkshopIds = [
   ),
 ];
 
-const commands = allWorkshopIds.map((i) => `workshop_download_item 108600 ${i} validate`);
+if (!config.enableSteam) {
+  const commands = allWorkshopIds.map((i) => `workshop_download_item 108600 ${i} validate`);
 
-for await (const line of steamCmd.run(commands)) {
-  console.log(line);
+  for await (const line of steamCmd.run(commands)) {
+    console.log(line);
+  }
 }
 
 const serverDataPath = path.join(os.homedir(), 'Zomboid');
@@ -85,52 +86,8 @@ const globalWorkshopPath = path.join(os.homedir(), 'Steam', 'steamapps', 'worksh
 let modLoadIds = [];
 
 if (config.enableSteam) {
-  const serverWorkshopPath = path.join(config.serverPath, 'steamapps', 'workshop');
-
-  try {
-    await fsPromises.lstat(serverWorkshopPath);
-  } catch {
-    console.log(`
-      ${serverWorkshopPath} doesn't exist.
-      Creating a link from the global steamapps folder...
-    `);
-
-    try {
-      await fsPromises.symlink(globalWorkshopPath, serverWorkshopPath);
-    } catch (err) {
-      console.error(`
-        Unable to create symbolic link ${globalWorkshopPath} -> ${serverWorkshopPath}.
-        Reported error: ${err}.
-      `);
-      process.exit(1);
-    }
-  }
-} else {
-  const modsPath = path.join(serverDataPath, 'mods');
-
-  rimraf.sync(modsPath);
-
-  try {
-    await fsPromises.mkdir(modsPath);
-  } catch (err) {
-    console.error(`Unable to create folder ${modsPath}.\nReported error: ${err}.`);
-    process.exit(1);
-  }
-
   const workshopModsPath = path.join(globalWorkshopPath, 'content', '108600');
   const modInfoPaths = glob.sync(path.join(workshopModsPath, '**', 'mod.info'));
-
-  modInfoPaths.forEach((p) => {
-    const modPath = path.dirname(p);
-    const modLinkPath = path.join(modsPath, path.basename(modPath));
-
-    try {
-      fs.symlinkSync(modPath, modLinkPath);
-    } catch (err) {
-      console.error(`Unable to create symbolic link ${modPath} -> ${modLinkPath}.\nReported error: ${err}.`);
-      process.exit(1);
-    }
-  });
 
   modLoadIds = modInfoPaths.map((p) => {
     const modInfo = ini.parse(fs.readFileSync(p, 'utf-8'));
@@ -153,8 +110,8 @@ const parsedServerConfig = ini.parse(serverConfig);
 
 if (config.enableSteam) {
   parsedServerConfig.WorkshopItems = allWorkshopIds.join(';');
-} else {
-  parsedServerConfig.Mods = modLoadIds.join(';');
 }
+
+parsedServerConfig.Mods = modLoadIds.join(';');
 
 await fsPromises.writeFile(serverConfigPath, ini.stringify(parsedServerConfig), 'utf-8');

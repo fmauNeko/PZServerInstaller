@@ -30,17 +30,16 @@
     "@commitlint/config-conventional": "^17.1.0",
     "commitizen": "^4.2.5",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^8.2.0",
+    "eslint": "^8.24.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^39.3.6",
     "husky": "^8.0.1"
   },
   "dependencies": {
     "glob": "^8.0.3",
-    "got": "^12.3.1",
+    "got": "^12.5.1",
     "ini-win": "^3.0.3",
-    "rimraf": "^3.0.2",
     "steamcmd-interface": "^4.0.2",
     "toml": "^3.0.0"
   }
